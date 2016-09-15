@@ -1,0 +1,4 @@
+include($$PWD/base_cplusplus_base_library.pri)
+
+
+

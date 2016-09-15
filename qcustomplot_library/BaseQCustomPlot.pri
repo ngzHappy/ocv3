@@ -1,0 +1,6 @@
+QT += printsupport
+INCLUDEPATH += $$PWD
+
+#DEFINES += QCUSTOMPLOT_USE_OPENGL
+
+
