@@ -404,9 +404,9 @@ static void rehash (lua_State *L, Table *t, const TValue *ek) {
 Table *luaH_new (lua_State *L) {
   GCObject *o = luaC_newobj(L, LUA_TTABLE, sizeof(Table));
   Table *t = gco2t(o);
-  t->metatable = NULL;
+  t->metatable = nullptr;
   t->flags = cast_byte(~0);
-  t->array = NULL;
+  t->array = nullptr;
   t->sizearray = 0;
   setnodevector(L, t, 0);
   return t;
@@ -427,7 +427,7 @@ static Node *getfreepos (Table *t) {
     if (ttisnil(gkey(t->lastfree)))
       return t->lastfree;
   }
-  return NULL;  /* could not find a free place */
+  return nullptr;  /* could not find a free place */
 }
 
 
@@ -456,7 +456,7 @@ TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
   if (!ttisnil(gval(mp)) || isdummy(mp)) {  /* main position is taken? */
     Node *othern;
     Node *f = getfreepos(t);  /* get a free place */
-    if (f == NULL) {  /* cannot find a free place? */
+    if (f == nullptr) {  /* cannot find a free place? */
       rehash(L, t, key);  /* grow table */
       /* whatever called 'newkey' takes care of TM cache */
       return luaH_set(L, t, key);  /* insert key into grown table */
@@ -558,7 +558,7 @@ const TValue *luaH_getstr (Table *t, TString *key) {
     return luaH_getshortstr(t, key);
   else {  /* for long strings, use generic case */
     TValue ko;
-    setsvalue(cast(lua_State *, NULL), &ko, key);
+    setsvalue(cast(lua_State *, nullptr), &ko, key);
     return getgeneric(t, &ko);
   }
 }

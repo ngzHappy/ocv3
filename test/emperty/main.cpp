@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
         luaL_openlibs(L);
 
         lua_newuserdata(L,32);
-
+        lua_close(L);
     }
 
     return app.exec();

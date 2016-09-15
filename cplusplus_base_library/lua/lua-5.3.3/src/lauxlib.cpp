@@ -131,7 +131,7 @@ LUALIB_API void luaL_traceback(lua_State *L,lua_State *L1,
     int n1=(last-level>LEVELS1+LEVELS2)?LEVELS1:-1;
     if (msg)
         lua_pushfstring(L,"%s\n",msg);
-    luaL_checkstack(L,10,NULL);
+    luaL_checkstack(L,10,nullptr);
     lua_pushliteral(L,"stack traceback:");
     while (lua_getstack(L1,level++,&ar)) {
         if (n1--==0) {  /* too many levels? */
@@ -173,7 +173,7 @@ LUALIB_API int luaL_argerror(lua_State *L,int arg,const char *extramsg) {
             return luaL_error(L,"calling '%s' on bad self (%s)",
                                  ar.name,extramsg);
     }
-    if (ar.name==NULL)
+    if (ar.name==nullptr)
         ar.name=(pushglobalfuncname(L,&ar))?lua_tostring(L,-1):"?";
     return luaL_error(L,"bad argument #%d to '%s' (%s)",
                           arg,ar.name,extramsg);
@@ -275,7 +275,7 @@ LUALIB_API int luaL_fileresult(lua_State *L,int stat,const char *fname) {
 LUALIB_API int luaL_execresult(lua_State *L,int stat) {
     const char *what="exit";  /* type of termination */
     if (stat==-1)  /* error? */
-        return luaL_fileresult(L,0,NULL);
+        return luaL_fileresult(L,0,nullptr);
     else {
         l_inspectstat(stat,what);  /* interpret result */
         if (*what=='e' && stat==0)  /* successful termination? */
@@ -318,22 +318,22 @@ LUALIB_API void luaL_setmetatable(lua_State *L,const char *tname) {
 
 LUALIB_API void *luaL_testudata(lua_State *L,int ud,const char *tname) {
     void *p=lua_touserdata(L,ud);
-    if (p!=NULL) {  /* value is a userdata? */
+    if (p!=nullptr) {  /* value is a userdata? */
         if (lua_getmetatable(L,ud)) {  /* does it have a metatable? */
             luaL_getmetatable(L,tname);  /* get correct metatable */
             if (!lua_rawequal(L,-1,-2))  /* not the same? */
-                p=NULL;  /* value is a userdata with wrong metatable */
+                p=nullptr;  /* value is a userdata with wrong metatable */
             lua_pop(L,2);  /* remove both metatables */
             return p;
         }
     }
-    return NULL;  /* value is not a userdata with a metatable */
+    return nullptr;  /* value is not a userdata with a metatable */
 }
 
 
 LUALIB_API void *luaL_checkudata(lua_State *L,int ud,const char *tname) {
     void *p=luaL_testudata(L,ud,tname);
-    if (p==NULL) typeerror(L,ud,tname);
+    if (p==nullptr) typeerror(L,ud,tname);
     return p;
 }
 
@@ -464,7 +464,7 @@ static void *resizebox(lua_State *L,int idx,size_t newsize) {
     lua_Alloc allocf=lua_getallocf(L,&ud);
     UBox *box=(UBox *)lua_touserdata(L,idx);
     void *temp=allocf(ud,box->box,box->bsize,newsize);
-    if (temp==NULL && newsize>0) {  /* allocation error? */
+    if (temp==nullptr && newsize>0) {  /* allocation error? */
         resizebox(L,idx,0);  /* free buffer */
         luaL_error(L,"not enough memory for buffer allocation");
     }
@@ -482,7 +482,7 @@ static int boxgc(lua_State *L) {
 
 static void *newbox(lua_State *L,size_t newsize) {
     UBox *box=(UBox *)lua_newuserdata(L,sizeof(UBox));
-    box->box=NULL;
+    box->box=nullptr;
     box->bsize=0;
     if (luaL_newmetatable(L,"LUABOX")) {  /* creating metatable? */
         lua_pushcfunction(L,boxgc);
@@ -527,7 +527,7 @@ LUALIB_API char *luaL_prepbuffsize(luaL_Buffer *B,size_t sz) {
 
 
 LUALIB_API void luaL_addlstring(luaL_Buffer *B,const char *s,size_t l) {
-    if (l>0) {  /* avoid 'memcpy' when 's' can be NULL */
+    if (l>0) {  /* avoid 'memcpy' when 's' can be nullptr */
         char *b=luaL_prepbuffsize(B,l);
         memcpy(b,s,l*sizeof(char));
         luaL_addsize(B,l);
@@ -651,7 +651,7 @@ static const char *getF(lua_State *L,void *ud,size_t *size) {
       /* 'fread' can return > 0 *and* set the EOF flag. If next call to
          'getF' called 'fread', it might still wait for user input.
          The next check avoids this problem. */
-        if (feof(lf->f)) return NULL;
+        if (feof(lf->f)) return nullptr;
         *size=fread(lf->buff,1,sizeof(lf->buff),lf->f);  /* read block */
     }
     return lf->buff;
@@ -707,20 +707,20 @@ LUALIB_API int luaL_loadfilex(lua_State *L,const char *filename,
     int status,readstatus;
     int c;
     int fnameindex=lua_gettop(L)+1;  /* index of filename on the stack */
-    if (filename==NULL) {
+    if (filename==nullptr) {
         lua_pushliteral(L,"=stdin");
         lf.f=stdin;
     }
     else {
         lua_pushfstring(L,"@%s",filename);
         lf.f=fopen(filename,"r");
-        if (lf.f==NULL) return errfile(L,"open",fnameindex);
+        if (lf.f==nullptr) return errfile(L,"open",fnameindex);
     }
     if (skipcomment(&lf,&c))  /* read initial portion */
         lf.buff[lf.n++]='\n';  /* add line to correct line numbers */
     if (c==LUA_SIGNATURE[0]&&filename) {  /* binary file? */
         lf.f=freopen(filename,"rb",lf.f);  /* reopen in binary mode */
-        if (lf.f==NULL) return errfile(L,"reopen",fnameindex);
+        if (lf.f==nullptr) return errfile(L,"reopen",fnameindex);
         skipcomment(&lf,&c);  /* re-read initial portion */
     }
     if (c!=EOF)
@@ -746,7 +746,7 @@ typedef struct LoadS {
 static const char *getS(lua_State *L,void *ud,size_t *size) {
     LoadS *ls=(LoadS *)ud;
     (void)L;  /* not used */
-    if (ls->size==0) return NULL;
+    if (ls->size==0) return nullptr;
     *size=ls->size;
     ls->size=0;
     return ls->s;
@@ -850,7 +850,7 @@ static const char *luaL_findtable(lua_State *L,int idx,
     if (idx) lua_pushvalue(L,idx);
     do {
         e=strchr(fname,'.');
-        if (e==NULL) e=fname+strlen(fname);
+        if (e==nullptr) e=fname+strlen(fname);
         lua_pushlstring(L,fname,e-fname);
         if (lua_rawget(L,-2)==LUA_TNIL) {  /* no such field? */
             lua_pop(L,1);  /* remove this nil */
@@ -866,7 +866,7 @@ static const char *luaL_findtable(lua_State *L,int idx,
         lua_remove(L,-2);  /* remove previous table */
         fname=e+1;
     } while (*e=='.');
-    return NULL;
+    return nullptr;
 }
 
 
@@ -893,7 +893,7 @@ LUALIB_API void luaL_pushmodule(lua_State *L,const char *modname,
         lua_pop(L,1);  /* remove previous result */
         /* try global variable (and create one if it does not exist) */
         lua_pushglobaltable(L);
-        if (luaL_findtable(L,0,modname,sizehint)!=NULL)
+        if (luaL_findtable(L,0,modname,sizehint)!=nullptr)
             luaL_error(L,"name conflict for module '%s'",modname);
         lua_pushvalue(L,-1);
         lua_setfield(L,-3,modname);  /* _LOADED[modname] = new table */
@@ -925,7 +925,7 @@ LUALIB_API void luaL_openlib(lua_State *L,const char *libname,
 */
 LUALIB_API void luaL_setfuncs(lua_State *L,const luaL_Reg *l,int nup) {
     luaL_checkstack(L,nup,"too many upvalues");
-    for (; l->name!=NULL; l++) {  /* fill the table with given functions */
+    for (; l->name!=nullptr; l++) {  /* fill the table with given functions */
         int i;
         for (i=0; i<nup; i++)  /* copy upvalues to the top */
             lua_pushvalue(L,-nup);
@@ -986,7 +986,7 @@ LUALIB_API const char *luaL_gsub(lua_State *L,const char *s,const char *p,
     size_t l=strlen(p);
     luaL_Buffer b;
     luaL_buffinit(L,&b);
-    while ((wild=strstr(s,p))!=NULL) {
+    while ((wild=strstr(s,p))!=nullptr) {
         luaL_addlstring(&b,s,wild-s);  /* push prefix */
         luaL_addstring(&b,r);  /* push replacement in place of pattern */
         s=wild+l;  /* continue after 'p' */
@@ -999,7 +999,7 @@ LUALIB_API const char *luaL_gsub(lua_State *L,const char *s,const char *p,
 #include "../memory/Memory.hpp"
 static void *l_alloc(void *ud,void *ptr,size_t osize,size_t nsize) {
 
-    /*When nsize is zero, the allocator must behave like free and return NULL.*/
+    /*When nsize is zero, the allocator must behave like free and return nullptr.*/
     if (nsize==0) {
         memory::free(ptr);
         return nullptr;
@@ -1010,7 +1010,7 @@ static void *l_alloc(void *ud,void *ptr,size_t osize,size_t nsize) {
             /*
             When nsize is not zero, 
             the allocator must behave like realloc. 
-            The allocator returns NULL if and only if it cannot fulfill the 
+            The allocator returns nullptr if and only if it cannot fulfill the 
             request. Lua assumes that the allocator never fails when 
             osize >= nsize.
             */
@@ -1024,7 +1024,7 @@ static void *l_alloc(void *ud,void *ptr,size_t osize,size_t nsize) {
         }
         else {
             /*
-            When ptr is NULL, 
+            When ptr is nullptr, 
             osize encodes the kind of object that Lua is allocating. 
             osize is any of LUA_TSTRING, LUA_TTABLE, LUA_TFUNCTION, LUA_TUSERDATA, or LUA_TTHREAD 
             when (and only when) Lua is creating a new object of that type. 
@@ -1050,7 +1050,7 @@ static int panic(lua_State *L) {
 
 
 LUALIB_API lua_State *luaL_newstate(void) {
-    lua_State *L=lua_newstate(l_alloc,NULL);
+    lua_State *L=lua_newstate(l_alloc,nullptr);
     if (L) lua_atpanic(L,&panic);
     return L;
 }
@@ -1060,7 +1060,7 @@ LUALIB_API void luaL_checkversion_(lua_State *L,lua_Number ver,size_t sz) {
     const lua_Number *v=lua_version(L);
     if (sz!=LUAL_NUMSIZES)  /* check numeric types */
         luaL_error(L,"core and library have incompatible numeric types");
-    if (v!=lua_version(NULL))
+    if (v!=lua_version(nullptr))
         luaL_error(L,"multiple Lua VMs detected");
     else if (*v!=ver)
         luaL_error(L,"version mismatch: app. needs %f, Lua core provides %f",
