@@ -11,7 +11,7 @@ public:
     class TempStringData{
     public:
         char * data;
-        std::size_t length/*at least 128*/;
+        int length/*at least 128*/;
     };
 
     virtual ~PrintTableCallback()=default;
@@ -24,7 +24,7 @@ public:
     virtual void write_string(const char*,std::size_t)=0;
 };
 
-LUA_API void print_table(lua::State*,PrintTableCallback*);
+LUA_API void print_table(lua::State*,int,PrintTableCallback*);
 
 }/*luaL*/
 

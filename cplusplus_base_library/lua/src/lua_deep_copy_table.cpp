@@ -2,7 +2,7 @@
 #define LUA_LIB
 #endif
 
-#include "../memory/MemoryLibrary.hpp"
+#include "../../memory/MemoryLibrary.hpp"
 #include "deep_copy_table.hpp"
 #include <list>
 #include <set>

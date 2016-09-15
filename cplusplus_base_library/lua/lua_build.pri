@@ -1,5 +1,5 @@
 include($$PWD/lua_base.pri)
-
+include($$PWD/src/3rd/double-conversion/double-conversion.pri)
 
 HEADERS += \
     $$PWD/lua-5.3.3/src/lapi.h \
