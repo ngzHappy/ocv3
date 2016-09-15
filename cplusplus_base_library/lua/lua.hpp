@@ -238,6 +238,8 @@ inline auto pushnumber(State *L,lua_Number n)->void { return lua_pushnumber(L,n)
 inline auto pushinteger(State *L,lua_Integer n)->void { return lua_pushinteger(L,n); }
 /**/
 inline auto pushlstring(State *L,const char *s,size_t len)->const char * { return lua_pushlstring(L,s,len); }
+template<std::size_t N>
+inline auto pushlstring(State *L,const char(&arg)[N]) ->const char * { return pushlstring(L,arg,N-1); }
 /**/
 inline auto pushstring(State *L,const char *s)->const char * { return lua_pushstring(L,s); }
 /**/

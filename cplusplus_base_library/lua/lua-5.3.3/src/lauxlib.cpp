@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** $Id: lauxlib.c,v 1.286 2016/01/08 15:33:09 roberto Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <cstring>
 
 /*
 ** This file uses only the official API of Lua.
@@ -1008,10 +1008,10 @@ static void *l_alloc(void *ud,void *ptr,size_t osize,size_t nsize) {
 
         if (ptr&&osize) {
             /*
-            When nsize is not zero, 
-            the allocator must behave like realloc. 
-            The allocator returns nullptr if and only if it cannot fulfill the 
-            request. Lua assumes that the allocator never fails when 
+            When nsize is not zero,
+            the allocator must behave like realloc.
+            The allocator returns nullptr if and only if it cannot fulfill the
+            request. Lua assumes that the allocator never fails when
             osize >= nsize.
             */
             if (osize>=nsize) { return ptr; }
@@ -1024,11 +1024,11 @@ static void *l_alloc(void *ud,void *ptr,size_t osize,size_t nsize) {
         }
         else {
             /*
-            When ptr is nullptr, 
-            osize encodes the kind of object that Lua is allocating. 
-            osize is any of LUA_TSTRING, LUA_TTABLE, LUA_TFUNCTION, LUA_TUSERDATA, or LUA_TTHREAD 
-            when (and only when) Lua is creating a new object of that type. 
-            When osize is some other value, Lua is allocating memory 
+            When ptr is nullptr,
+            osize encodes the kind of object that Lua is allocating.
+            osize is any of LUA_TSTRING, LUA_TTABLE, LUA_TFUNCTION, LUA_TUSERDATA, or LUA_TTHREAD
+            when (and only when) Lua is creating a new object of that type.
+            When osize is some other value, Lua is allocating memory
             for something else.
             */
             memory::free(ptr);

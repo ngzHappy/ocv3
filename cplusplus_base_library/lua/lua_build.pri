@@ -27,7 +27,9 @@ HEADERS += \
     $$PWD/lua-5.3.3/src/lualib.h \
     $$PWD/lua-5.3.3/src/lundump.h \
     $$PWD/lua-5.3.3/src/lvm.h \
-    $$PWD/lua-5.3.3/src/lzio.h
+    $$PWD/lua-5.3.3/src/lzio.h \
+    $$PWD/src/deep_copy_table.hpp \
+    $$PWD/src/print_table.hpp
 
 SOURCES += \
     $$PWD/lua-5.3.3/src/lapi.cpp \
@@ -62,7 +64,9 @@ SOURCES += \
     $$PWD/lua-5.3.3/src/lundump.cpp \
     $$PWD/lua-5.3.3/src/lutf8lib.cpp \
     $$PWD/lua-5.3.3/src/lvm.cpp \
-    $$PWD/lua-5.3.3/src/lzio.cpp
+    $$PWD/lua-5.3.3/src/lzio.cpp \
+    $$PWD/src/lua_deep_copy_table.cpp \
+    $$PWD/src/lua_print_table.cpp
 
 
 
