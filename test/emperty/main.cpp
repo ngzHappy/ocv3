@@ -34,6 +34,9 @@ int main(int argc, char *argv[]){
         lua::setglobal(L,"deep_copy_table");
 
         luaL::dostring(L,u8R"____(
+
+--deep_copy_table(1,2)
+
 print("-----------")
 
 a={1,2,3,4,5,}
