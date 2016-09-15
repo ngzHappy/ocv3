@@ -20,6 +20,8 @@ HEADERS += $$PWD/Cplusplus_base_library.hpp \
 
 include($$PWD/base_cplusplus_base_library.pri)
 
+include($$PWD/lua/lua_build.pri)
+
 include($$PWD/../OpenCVBase.pri)
 DESTDIR=$$THIS_PROJECT_DESTDIR
 
