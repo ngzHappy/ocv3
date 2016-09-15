@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QCustomPlot.hpp>
 #include <memory/MemoryLibrary.hpp>
+#include <lua/lua.hpp>
 
 int main(int argc, char *argv[]){
     QApplication app(argc, argv);
@@ -19,6 +20,14 @@ int main(int argc, char *argv[]){
         memory::constructStatic();
         auto tmp=memory::malloc(12);
         memory::free(tmp);
+    }
+
+    {
+        auto L=luaL_newstate();
+        luaL_openlibs(L);
+
+        lua_newuserdata(L,32);
+
     }
 
     return app.exec();
