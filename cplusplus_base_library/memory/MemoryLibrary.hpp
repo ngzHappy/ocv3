@@ -1,5 +1,5 @@
-#ifndef _____MEMOEY__HPP__CPP_L
-#define _____MEMOEY__HPP__CPP_L
+#ifndef _z____MEMOEY__HPP__CPP_L
+#define _z____MEMOEY__HPP__CPP_L
 
 #include "Allocator.hpp"
 #include "MakeFunction.hpp"

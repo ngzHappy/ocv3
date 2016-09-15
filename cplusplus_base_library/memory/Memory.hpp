@@ -13,6 +13,16 @@
 #define _EXPORT_MALLOC_FREE_IMPORT CPLUSPLUS_BASE_LIBRARYSHARED_EXPORT
 #endif
 
+#if !defined(MEMORY_CLASS_NEW_DELETE)
+
+#define MEMORY_CLASS_NEW_DELETE public: \
+static void operator delete(void *arg) { memory::free(arg); } \
+static void operator delete[](void *arg) { memory::free(arg); } \
+static void * operator new(std::size_t n) { auto ans=memory::malloc(n); if (ans) { return ans; }throw std::bad_alloc{}; } \
+static void * operator new[](std::size_t n) { auto ans=memory::malloc(n); if (ans) { return ans; }throw std::bad_alloc{}; } 
+
+#endif
+
 namespace memory {
 
 _EXPORT_MALLOC_FREE_IMPORT void * malloc(std::size_t);
