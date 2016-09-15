@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** $Id: lstrlib.c,v 1.251 2016/05/20 14:13:21 roberto Exp $
 ** Standard library for string operations and pattern-matching
 ** See Copyright Notice in lua.h
@@ -46,7 +46,7 @@
 #define MAX_SIZET	((size_t)(~(size_t)0))
 
 #define MAXSIZE  \
-	(sizeof(size_t) < sizeof(int) ? MAX_SIZET : (size_t)(INT_MAX))
+    (sizeof(size_t) < sizeof(int) ? MAX_SIZET : (size_t)(INT_MAX))
 
 
 
@@ -933,7 +933,7 @@ static void addquoted (luaL_Buffer *b, const char *s, size_t len) {
 static void checkdp (char *buff, int nb) {
   if (memchr(buff, '.', nb) == NULL) {  /* no dot? */
     char point = lua_getlocaledecpoint();  /* try locale point */
-    char *ppoint = memchr(buff, point, nb);
+    char *ppoint = reinterpret_cast<char*>(memchr(buff, point, nb));
     if (ppoint) *ppoint = '.';  /* change it to a dot */
   }
 }
@@ -1259,7 +1259,7 @@ static KOption getoption (Header *h, const char **fmt, int *size) {
 ** 'psize' is filled with option's size, 'notoalign' with its
 ** alignment requirements.
 ** Local variable 'size' gets the size to be aligned. (Kpadal option
-** always gets its full alignment, other options are limited by 
+** always gets its full alignment, other options are limited by
 ** the maximum alignment ('maxalign'). Kchar option needs no alignment
 ** despite its size.
 */
