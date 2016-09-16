@@ -52,8 +52,8 @@ using DutiesType=std::list<Function,memory::Allocator<Function>>;
 class KeyItem {
 public:
     string tableName;
+    bool isTableNameIsIntAndIsContinueInParent=false;
     IntType parentTableIndex;
-    IntType arrayIndexCount=0;
     bool isArrayKeyContinue=true;
     template<typename _T_>
     KeyItem(_T_&&tn,IntType pti):tableName(std::forward<_T_>(tn)),
@@ -194,6 +194,23 @@ inline std::size_t find_string_op(const char * begin,const char *end) {
 }
 
 template<typename _T_>
+string to_string(lua::State*L,int k,_T_*) {
+    std::size_t length_=0;
+    const char * data_=luaL::tolstring(L,k,&length_);
+    if (length_==0) {
+        lua::pop(L,1);
+        return{};
+    }
+    auto op_size_=find_string_op(data_,data_+length_);
+    const string op_(op_size_,'=');
+    string str(data_,length_);
+    lua::pop(L,1);
+    return "["+op_+"["
+        +std::move(str)
+        +"]"+op_+"]";
+}
+
+template<typename _T_>
 string key_string(lua::State*L,int k,_T_*c) {
     if (lua::isinteger(L,k)) {
         auto key=lua::tointeger(L,k);
@@ -203,21 +220,45 @@ string key_string(lua::State*L,int k,_T_*c) {
         return string(string_key.data,string_key.length);
     }
     else {
-        std::size_t length_=0;
-        const char * data_=luaL::tolstring(L,k,&length_);
-        if (length_==0) {
-            lua::pop(L,1);
-            return{};
-        }
-        auto op_size_=find_string_op(data_,data_+length_);
-        const string op_(op_size_,'=');
-        string str(data_,length_);
-        lua::pop(L,1);
-        return "["+op_+"["
-            +std::move(str)
-            +"]"+op_+"]";
+        return to_string(L,k,c);
     }
 }
+
+template<typename _T_>
+string value_string(lua::State*L,int v,_T_*c) {
+    lua::BaseTypes t=lua::type(L,v);
+    switch (t) {
+        case lua::TNONE:return"nil"; break;
+        case lua::TNIL:return"nil"; break;
+        case lua::TBOOLEAN: if (lua::toboolean(L,v)) { return"true"; }
+                            else { return "false"; } break;
+        case lua::TLIGHTUSERDATA:return"TLIGHTUSERDATA"; break;
+        case lua::TNUMBER:
+            if (lua::isinteger(L,v)) {
+                auto i=lua::tointeger(L,v);
+                auto tmp_data=c->temp_space();
+                auto ans=number_string(i,tmp_data.data,tmp_data.length);
+                if (ans.data&&ans.length) { return string(ans.data,ans.length); }
+            }
+            else {
+                auto d=lua::tonumber(L,v);
+                auto tmp_data=c->temp_space();
+                auto ans=number_string(d,tmp_data.data,tmp_data.length);
+                if (ans.data&&ans.length) { return string(ans.data,ans.length); }
+            }
+            break;
+        case lua::TSTRING: return to_string(L,v,c); break;
+        case lua::TTABLE:return"TTABLE"; break;
+        case lua::TFUNCTION:return"TFUNCTION"; break;
+        case lua::TUSERDATA:return"TUSERDATA"; break;
+        case lua::TTHREAD:return"TTHREAD"; break;
+        case lua::NUMTAGS:return"NUMTAGS"; break;
+        default:break;
+    }
+    return{};
+}
+
+
 template<typename _T_>
 class DataPrintTable {
 public:
@@ -229,6 +270,52 @@ public:
     lua::State * L;
     IntType sources_table;
     IntType table_count;
+};
+
+template<typename _C_>
+class PrintString {
+    string _m_String;
+    DataPrintTable<_C_> * _m_DataPrintTable;
+public:
+    template<typename _S_>
+    PrintString(_S_&&s,DataPrintTable<_C_> *p):_m_String(std::move(s)),
+        _m_DataPrintTable(p) {}
+    void call() {
+        _m_DataPrintTable->callback->write_string(
+            _m_String.c_str(),
+            static_cast<int>(_m_String.size()));
+    }
+private:
+    MEMORY_CLASS_NEW_DELETE
+};
+
+template<typename _C_>
+class BeginPrintATable {
+    IntType _m_TableIndex;
+    DataPrintTable<_C_> * _m_DataPrintTable;
+public:
+    BeginPrintATable(IntType ti,DataPrintTable<_C_> *dt):
+        _m_TableIndex(ti),
+        _m_DataPrintTable(dt) {
+    }
+
+    void call() {
+        auto & keyItem=_m_DataPrintTable->allTables[_m_TableIndex];
+        if (false==keyItem.isTableNameIsIntAndIsContinueInParent) {
+            _m_DataPrintTable->callback->write_string("[ ",2);
+            _m_DataPrintTable->callback->write_string(
+                keyItem.tableName.c_str(),
+                static_cast<int>(keyItem.tableName.size()));
+            _m_DataPrintTable->callback->write_string(" = { ",5);
+            _m_DataPrintTable->callback->write_string(" ]",2);
+        }
+        else {
+            _m_DataPrintTable->callback->write_string("{ ",2);
+        }
+    }
+
+private:
+    MEMORY_CLASS_NEW_DELETE
 };
 
 template<typename _C_>
@@ -274,17 +361,92 @@ public:
             [](void *arg) {delete reinterpret_cast<EndPrintATable<_C_>*>(arg); }
         );
 
+        auto duties_insert_pos=_m_DataPrintTable->duties.begin();
+        _m_DataPrintTable->duties.emplace(duties_insert_pos,
+            new BeginPrintATable<_C_>(_m_TableIndex,_m_DataPrintTable),
+            [](void *arg) {reinterpret_cast<BeginPrintATable<_C_>*>(arg)->call(); },
+            [](void *arg) {delete reinterpret_cast<BeginPrintATable<_C_>*>(arg); }
+        );
+
         lua::rawgeti(L,_m_DataPrintTable->sources_table,_m_TableIndex);
         const auto table_index=lua::gettop(L);
 
         auto & keyItem=_m_DataPrintTable->allTables[_m_TableIndex];
-        {
+        {/*children：*/
             lua::pushnil(L);
+            const auto stack_lock=lua::gettop(L);
             constexpr auto key_=-2;
             constexpr auto value_=-1;
             IntType arrayKey=1;
             while (lua::next(L,table_index)) {
-                if (lua::isinteger(L,key_)) {
+
+                /*is key is int and continue*/
+                if (keyItem.isArrayKeyContinue) {
+                    keyItem.isArrayKeyContinue=lua::isinteger(L,key_);
+                    if (keyItem.isArrayKeyContinue) {
+                        auto ikey=lua::tointeger(L,key_);
+                        if (ikey==arrayKey) {
+                            ++arrayKey;
+                        }
+                        else {
+                            keyItem.isArrayKeyContinue=false;
+                        }
+                    }
+                }
+
+                if (lua::istable(L,value_)) {
+                    auto table_id=lua::topointer(L,value_);
+                    auto table_pos=_m_DataPrintTable->tablesMap.find(table_id);
+                    if (table_pos==_m_DataPrintTable->tablesMap.end()) {/*new child*/
+                        {
+                            KeyItem thisKeyItem;
+                            thisKeyItem.isTableNameIsIntAndIsContinueInParent=keyItem.isArrayKeyContinue;
+                            thisKeyItem.parentTableIndex=_m_TableIndex;
+                            thisKeyItem.tableName=key_string(L,key_,_m_DataPrintTable->callback);
+                            _m_DataPrintTable->allTables.push_back(std::move(thisKeyItem));
+                        }
+
+                        auto this_table_index=++_m_DataPrintTable->table_count;
+                        _m_DataPrintTable->tablesMap.emplace(table_id,this_table_index);
+                        lua::pushvalue(L,value_);
+                        lua::rawseti(L,_m_DataPrintTable->sources_table,this_table_index);
+
+                        _m_DataPrintTable->duties.emplace(
+                            duties_insert_pos,
+                            new PrintATable<_C_>{ this_table_index,_m_DataPrintTable },
+                            [](void *arg) {reinterpret_cast<PrintATable<_C_>*>(arg)->call(); },
+                            [](void *arg) {delete reinterpret_cast<PrintATable<_C_>*>(arg); }
+                        );
+
+                        lua::settop(L,stack_lock);
+                    }
+                    else {/*old one*/
+
+                        lua::settop(L,stack_lock);
+                    }
+
+                }
+                else {
+                    string str;
+                    str.reserve(64);
+                    if (keyItem.isArrayKeyContinue) {
+                        str=value_string(L,value_,_m_DataPrintTable->callback);
+                        str+=" , ";
+                    }
+                    else {
+                        str=" [ ";
+                        str+=key_string(L,key_,_m_DataPrintTable->callback);
+                        str+=" ] = ";
+                        str=value_string(L,value_,_m_DataPrintTable->callback);
+                        str+=" , ";
+                    }
+                    _m_DataPrintTable->duties.emplace(
+                        duties_insert_pos,
+                        new PrintString<_C_>{ std::move(str),_m_DataPrintTable },
+                        [](void *arg) {reinterpret_cast<PrintString<_C_>*>(arg)->call(); },
+                        [](void *arg) {delete reinterpret_cast<PrintString<_C_>*>(arg); }
+                    );
+                    lua::settop(L,stack_lock);
                 }
             }
         }

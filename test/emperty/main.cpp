@@ -7,8 +7,9 @@
 #include <lua/src/deep_copy_table.hpp>
 #include <lua/src/print_table.hpp>
 
-#include<iostream>
+#include <iostream>
 #include <regex>
+#include <list>
 
 int main(int argc, char *argv[]){
 
