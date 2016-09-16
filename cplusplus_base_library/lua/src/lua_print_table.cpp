@@ -397,17 +397,17 @@ public:
                     keyItem.tableName.c_str(),
                     static_cast<int>(keyItem.tableName.size()));
                 _m_DataPrintTable->callback->write_string(" ]",2);
-                _m_DataPrintTable->callback->write_string(" = { \n",6);
+                _m_DataPrintTable->callback->write_string(" = {\n",5);
             }
             else {
                 _m_DataPrintTable->callback->write_string(
                     keyItem.tableName.c_str(),
                     static_cast<int>(keyItem.tableName.size()));
-                _m_DataPrintTable->callback->write_string(" = { \n",6);
+                _m_DataPrintTable->callback->write_string(" = {\n",5);
             }
         }
         else {
-            _m_DataPrintTable->callback->write_string("{ \n",3);
+            _m_DataPrintTable->callback->write_string("{\n",2);
         }
     }
 
@@ -438,10 +438,10 @@ public:
         }
 
         if (_m_TableIndex>1) {
-            _m_DataPrintTable->callback->write_string("} ,  \n",6);
+            _m_DataPrintTable->callback->write_string("} ,\n",4);
         }
         else {
-            _m_DataPrintTable->callback->write_string("}    \n",6);
+            _m_DataPrintTable->callback->write_string("}\n",2);
         }
         _m_DataPrintTable->tablePath.pop_back();
     }
@@ -575,14 +575,14 @@ public:
                     str.reserve(64);
                     if (keyItem.isArrayKeyContinue) {
                         str=value_string(L,value_,_m_DataPrintTable->callback);
-                        str+=" , \n";
+                        str+=" ,\n";
                     }
                     else {
                         str=" [ ";
                         str+=key_string(L,key_,_m_DataPrintTable->callback);
                         str+=" ] = ";
                         str+=value_string(L,value_,_m_DataPrintTable->callback);
-                        str+=" , \n";
+                        str+=" ,\n";
                     }
                     _m_DataPrintTable->duties.emplace(
                         duties_insert_pos,
@@ -621,6 +621,13 @@ int print_table(lua::State *L) {
         reinterpret_cast<_T_*>(lua::touserdata(L,source_callback_index))
     };
 
+    {/*write begin*/
+        char _begin_data[]=u8R"=___=((function()--[[function begin]]
+
+local )=___=";
+        dataPrintTable.callback->write_string(_begin_data,sizeof(_begin_data)-1);
+    }
+
     {/*init datas*/
         lua::newtable(L);
         dataPrintTable.sources_table=lua::gettop(L);
@@ -649,6 +656,13 @@ int print_table(lua::State *L) {
     }
 
     dataPrintTable.callback->write_string("\n",1);
+    
+    {/*write end*/
+        char _end_data[]=u8R"=___=(return ans;
+end)()--[[function end]]
+)=___=";
+        dataPrintTable.callback->write_string(_end_data,sizeof(_end_data)-1);
+    }
     dataPrintTable.callback->finished();
 
     return 0;
