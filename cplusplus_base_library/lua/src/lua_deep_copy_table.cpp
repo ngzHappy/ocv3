@@ -4,6 +4,7 @@
 
 #include "../../memory/MemoryLibrary.hpp"
 #include "deep_copy_table.hpp"
+#include "default_error_function.hpp"
 #include <list>
 #include <set>
 #include <map>
@@ -133,6 +134,18 @@ int deep_copy_table(lua::State*L) {
     constexpr auto source_table=1;
     constexpr auto target_table=2;
 
+    if (lua::istable(L,source_table)==false) {
+        lua::pushlstring(L,"source is not a table");
+        lua::error(L);
+        return 0;
+    }
+
+    if (lua::istable(L,target_table)==false) {
+        lua::pushlstring(L,"target is not a table");
+        lua::error(L);
+        return 0;
+    }
+
     lua::newtable(L);
     const auto source_tmp_table=lua::gettop(L);
 
@@ -174,40 +187,26 @@ int deep_copy_table(lua::State*L) {
 
 namespace luaL {
 
-void deep_copy_table(lua::State*L,int/*from*/argFrom,int/*to*/argTo) {
+lua::ThreadStatus deep_copy_table(lua::State*L,int/*from*/argFrom,int/*to*/argTo) {
 
-    if (argFrom==argTo) { return; }
+    if (argFrom==argTo) { return lua::OK; }
 
     argFrom=lua::absindex(L,argFrom);
     argTo=lua::absindex(L,argTo);
 
-    if (lua::istable(L,argFrom)==false) {
-        lua::pushlstring(L,"from is not a table");
-        lua::error(L);
-        return;
-    }
-
-    if (lua::istable(L,argTo)==false) {
-        lua::pushlstring(L,"to is not a table");
-        lua::error(L);
-        return;
-    }
-
     {
         lua::pushcfunction(L,&__private::deep_copy_table);
-        lua::pushvalue(L,argFrom);
-        lua::pushvalue(L,argTo);
-        if (lua::pcall(L,2,lua::MULTRET,0)==lua::OK) {
-            return;
-        }
-        lua::error(L);
+        lua::pushvalue(L,argFrom)/*from table*/;
+        lua::pushvalue(L,argTo)/*to table*/;
+        lua::pushcfunction(L,&luaL::default_lua_error_function)/*error function*/;
+        auto epos=lua::gettop(L);
+        return lua::pcall(L,3,lua::MULTRET,epos);
     }
 
 }
 
 int function_deep_copy_table(lua::State*L) {
-    deep_copy_table(L,-2/*from*/,-1/*to*/);
-    return 0;
+    return __private::deep_copy_table(L);
 }
 
 }

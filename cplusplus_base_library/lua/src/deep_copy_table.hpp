@@ -5,7 +5,7 @@
 
 namespace luaL {
 
-LUA_API void deep_copy_table(lua::State*,int/*from*/,int/*to*/);
+LUA_API lua::ThreadStatus deep_copy_table(lua::State*,int/*from*/,int/*to*/);
 LUA_API int function_deep_copy_table(lua::State*);
 
 }

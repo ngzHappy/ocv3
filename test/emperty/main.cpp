@@ -5,8 +5,13 @@
 #include <lua/lua.hpp>
 
 #include <lua/src/deep_copy_table.hpp>
+#include <lua/src/print_table.hpp>
+
+#include<iostream>
+#include <regex>
 
 int main(int argc, char *argv[]){
+
     QApplication app(argc, argv);
 
     /*Test for main Window*/
@@ -33,6 +38,9 @@ int main(int argc, char *argv[]){
         lua::pushcfunction(L,&luaL::function_deep_copy_table);
         lua::setglobal(L,"deep_copy_table");
 
+        lua::pushcfunction(L,&luaL::function_print_table);
+        lua::setglobal(L,"print_table");
+
         luaL::dostring(L,u8R"____(
 
 --deep_copy_table(1,2)
@@ -41,10 +49,16 @@ print("-----------")
 
 a={1,2,3,4,5,}
 a.b={4,5,6,7,8}
+a[ [=[=ee]=] ]="12343254"
+a[ -333 ] = 32
 a.m={1,2,3,4}
 a.b.c={8,9,0,12,3}
 a.t=a.b
 a.n=a.b
+
+print("!!")
+print_table(a);
+print("!!")
 
 b={}
 deep_copy_table(a,b)

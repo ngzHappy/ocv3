@@ -18,10 +18,15 @@ app_test_emperty.file = $$PWD/test/emperty/emperty.pro
 app_test_emperty.depends+=lib_cplusplus_base_library
 app_test_emperty.depends+=lib_qcustomplot_library
 
+app_test_lua.file = $$PWD/test/test_lua/test_lua.pro
+app_test_lua.depends+=lib_cplusplus_base_library
+app_test_lua.depends+=lib_qcustomplot_library
+
 SUBDIRS += \
     lib_cplusplus_base_library \
     lib_qcustomplot_library \
-    app_test_emperty
+    app_test_emperty \
+    app_test_lua 
 
 
 

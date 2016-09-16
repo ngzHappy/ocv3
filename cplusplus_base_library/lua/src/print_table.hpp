@@ -22,9 +22,14 @@ public:
     PrintTableCallback&operator=(PrintTableCallback&&)=default;
     virtual TempStringData temp_space()const =0;
     virtual void write_string(const char*,std::size_t)=0;
+    virtual void begin() {}
+    virtual void finished() {}
+    virtual void end() {}
 };
 
-LUA_API void print_table(lua::State*,int,PrintTableCallback*);
+LUA_API lua::ThreadStatus print_table(lua::State*,int,PrintTableCallback*);
+
+LUA_API int function_print_table(lua::State*);
 
 }/*luaL*/
 
