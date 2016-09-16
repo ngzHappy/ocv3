@@ -193,21 +193,48 @@ inline std::size_t find_string_op(const char * begin,const char *end) {
     return 0;
 }
 
+inline bool is_simple_char(char i) {
+    if ((i>='a')&&(i<='z')) { return true; }
+    if ((i>='A')&&(i<='X')) { return true; }
+    /*0-9 :;<=>*/
+    if ((i>='0')&&(i<='>')) { return true; }
+    return i=='_' ;
+}
+
 template<typename _T_>
 string to_string(lua::State*L,int k,_T_*) {
     std::size_t length_=0;
     const char * data_=luaL::tolstring(L,k,&length_);
+
     if (length_==0) {
         lua::pop(L,1);
         return{};
     }
-    auto op_size_=find_string_op(data_,data_+length_);
+
+    auto end_=data_+length_;
+    {
+        auto begin_=data_;
+
+        for (; begin_!=end_; ++begin_) {
+            if (is_simple_char(*begin_)==false) {
+                goto label_not_simple;
+            }
+        }
+
+        auto ans="\""+string(data_,length_)+"\"";
+        lua::pop(L,1);
+        return std::move(ans);
+    }
+
+label_not_simple:
+    auto op_size_=find_string_op(data_,end_);
     const string op_(op_size_,'=');
     string str(data_,length_);
     lua::pop(L,1);
     return "["+op_+"["
         +std::move(str)
         +"]"+op_+"]";
+
 }
 
 template<typename _T_>

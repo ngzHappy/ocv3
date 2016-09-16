@@ -90,6 +90,7 @@ int main(int argc, char *argv[]){
 xxx ={ 1 ,2, 3, z = {1.1,2.2,3.3, y ={4,5,6}},4,function()  end ,{7,9.999}}
 
 xxx.m = xxx.z
+xxx.n = xxx
 
 print_table(xxx)
 
