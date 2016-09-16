@@ -6,6 +6,7 @@
 
 #include <lua/src/deep_copy_table.hpp>
 #include <lua/src/print_table.hpp>
+#include <lua/src/default_error_function.hpp>
 #include <iostream>
 
 class XStatePack{
@@ -65,6 +66,26 @@ void test_lua(lua::State * L){
     x_test(L,1,2,3);
 }
 
+int error_test1(lua::State *L) {
+    class TestStack {
+        lua::State *L_;
+    public:
+        TestStack(lua::State *L__):L_(L__) {
+
+        }
+        ~TestStack() { 
+            std::cout<<"---c"<<std::endl;
+            lua::settop(L_,0);
+        }
+    };
+
+    TestStack stack{L};
+    lua::pushlstring(L,"test error1");
+    lua::error(L);
+
+    return 0;
+}
+
 int main(int argc, char *argv[]){
 
     QApplication app(argc, argv);
@@ -72,6 +93,19 @@ int main(int argc, char *argv[]){
     /*Test for main Window*/
     MainWindow window;
     window.show();
+    
+    {
+        luaL::error(0,0);
+    }
+
+    {
+        lua::State * L=luaL::newstate();
+        lua::pushcfunction(L,&error_test1);
+        lua::pushcfunction(L,luaL::default_lua_error_function);
+        lua::pcall(L,1,lua::MULTRET,0);
+        luaL::default_lua_error_function(L);
+        lua::close(L);
+    }
 
     {
         lua::State * L=luaL::newstate();

@@ -14,7 +14,8 @@
 
 
 #include "luaconf.h"
-
+class __lua_exception_type final { private:~__lua_exception_type()=default; };
+typedef __lua_exception_type * lua_exception_type;
 
 #define LUA_VERSION_MAJOR	"5"
 #define LUA_VERSION_MINOR	"3"
