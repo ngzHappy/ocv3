@@ -5,6 +5,16 @@
 
 namespace luaL {
 
+class StateLock {
+    int top_;
+    lua::State * L_;
+public:
+    StateLock(lua::State *_s):L_(_s) { if (L_) { top_=lua::gettop(L_); } }
+    ~StateLock() { if (L_) { lua::settop(L_,top_); } }
+    void clear() { L_=nullptr; }
+};
+
+
 LUA_API int default_lua_error_function(lua::State*);
 
 }
