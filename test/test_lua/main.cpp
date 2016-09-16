@@ -73,9 +73,36 @@ int main(int argc, char *argv[]){
     MainWindow window;
     window.show();
 
-    lua::State * L=luaL::newstate();
-    test_lua(L);
-    lua::close(L);
+    {
+        lua::State * L=luaL::newstate();
+        test_lua(L);
+        lua::close(L);
+    }
+
+    {
+        lua::State * L=luaL::newstate();
+        lua::openlibs(L);
+        
+        lua::pushcfunction(L,&luaL::function_print_table);
+        lua::setglobal(L,"print_table");
+
+        luaL::dostring(L,u8R"___(
+xxx ={ 1 ,2, 3, z = {1.1,2.2,3.3, y ={4,5,6}},4,function()  end ,{7,9.999}}
+
+xxx.m = xxx.z
+
+print_table(xxx)
+
+--print_table(table)
+
+for k,v in pairs(table) do
+    print(k,v)
+end
+
+ )___");
+             
+        lua::close(L);
+    }
 
     return app.exec();
 }

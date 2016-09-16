@@ -22,6 +22,9 @@ using IntType=int;
 using string=std::basic_string<char,std::char_traits<char>,memory::Allocator<char>>;
 using TablePath=std::list<IntType,memory::Allocator<int>>;
 
+constexpr const char * a_space() { return "    "; }
+constexpr int a_space_length() { return 4; }
+
 class Function {
     void *data_;
     void(*call_)(void*);
@@ -166,9 +169,6 @@ inline luaL::PrintTableCallback::TempStringData number_string(long long n,char *
     return int_to_string(n,d,l);
 }
 
-// virtual TempStringData temp_space()const =0;
-//virtual void write_string(const char*,std::size_t)=0;
-
 inline std::size_t find_string_op(const char * begin,const char *end) {
     if (begin>=end) { return 0; }
     {
@@ -232,7 +232,7 @@ string value_string(lua::State*L,int v,_T_*c) {
         case lua::TNIL:return"nil"; break;
         case lua::TBOOLEAN: if (lua::toboolean(L,v)) { return"true"; }
                             else { return "false"; } break;
-        case lua::TLIGHTUSERDATA:return"TLIGHTUSERDATA"; break;
+        case lua::TLIGHTUSERDATA:return"[==[TLIGHTUSERDATA]==]"; break;
         case lua::TNUMBER:
             if (lua::isinteger(L,v)) {
                 auto i=lua::tointeger(L,v);
@@ -248,11 +248,11 @@ string value_string(lua::State*L,int v,_T_*c) {
             }
             break;
         case lua::TSTRING: return to_string(L,v,c); break;
-        case lua::TTABLE:return"TTABLE"; break;
-        case lua::TFUNCTION:return"TFUNCTION"; break;
-        case lua::TUSERDATA:return"TUSERDATA"; break;
-        case lua::TTHREAD:return"TTHREAD"; break;
-        case lua::NUMTAGS:return"NUMTAGS"; break;
+        case lua::TTABLE:return"[==[TTABLE]==]"; break;
+        case lua::TFUNCTION:return"function() end"; break;
+        case lua::TUSERDATA:return"[==[TUSERDATA]==]"; break;
+        case lua::TTHREAD:return"[==[TTHREAD]==]"; break;
+        case lua::NUMTAGS:return"[==[NUMTAGS]==]"; break;
         default:break;
     }
     return{};
@@ -260,17 +260,59 @@ string value_string(lua::State*L,int v,_T_*c) {
 
 
 template<typename _T_>
-class DataPrintTable {
+class DataPrintTable final {
 public:
-    _T_ * callback;
+    _T_ * const callback;
     TablePath tablePath;
     AllTables allTables;
     TablesMap tablesMap;
     DutiesType duties;
+    DutiesType duties_endl;
     lua::State * L;
     IntType sources_table;
     IntType table_count;
+    DataPrintTable(_T_ *c):callback(c) { c->begin(); }
+    ~DataPrintTable() { callback->end(); }
 };
+
+template<typename _T_>
+TablePath get_table_path(DataPrintTable<_T_>*data_,IntType index_) {
+    const auto &allTables=data_->allTables;
+    if (index_>0) {
+        TablePath ans;
+
+        while (index_>1) {
+            ans.push_front(index_);
+            const auto & item=allTables[index_];
+            index_=item.parentTableIndex;
+        }
+        ans.push_front(1);
+
+        return std::move(ans);
+    };
+    return{};
+}
+
+template<typename _T_>
+string get_table_path_name(DataPrintTable<_T_>*data_,const TablePath& index_) {
+    if (index_.empty()) { return{}; }
+
+    const auto &allTables=data_->allTables;
+
+    string ans;
+    auto pos=index_.begin();
+    auto end=index_.end();
+
+    ans=allTables[*pos].tableName;
+
+    for (++pos; pos!=end; ++pos) {
+        ans+="[ ";
+        ans+=allTables[*pos].tableName;
+        ans+=" ]";
+    }
+
+    return std::move(ans);
+}
 
 template<typename _C_>
 class PrintString {
@@ -281,6 +323,15 @@ public:
     PrintString(_S_&&s,DataPrintTable<_C_> *p):_m_String(std::move(s)),
         _m_DataPrintTable(p) {}
     void call() {
+
+        {/*write space*/
+            auto deepth=(IntType)(_m_DataPrintTable->tablePath.size());
+            for (auto i=0; i<deepth; ++i) {
+                _m_DataPrintTable->callback->write_string(
+                    a_space(),a_space_length());
+            }
+        }
+
         _m_DataPrintTable->callback->write_string(
             _m_String.c_str(),
             static_cast<int>(_m_String.size()));
@@ -301,16 +352,35 @@ public:
 
     void call() {
         auto & keyItem=_m_DataPrintTable->allTables[_m_TableIndex];
+
+        {/*write space*/
+            auto deepth=(IntType)(_m_DataPrintTable->tablePath.size());
+            if (deepth>1) { --deepth; }
+            else { deepth=0; }
+            for (auto i=0; i<deepth; ++i) {
+                _m_DataPrintTable->callback->write_string(
+                a_space(),a_space_length());
+            }
+        }
+
         if (false==keyItem.isTableNameIsIntAndIsContinueInParent) {
-            _m_DataPrintTable->callback->write_string("[ ",2);
-            _m_DataPrintTable->callback->write_string(
-                keyItem.tableName.c_str(),
-                static_cast<int>(keyItem.tableName.size()));
-            _m_DataPrintTable->callback->write_string(" = { ",5);
-            _m_DataPrintTable->callback->write_string(" ]",2);
+            if (_m_TableIndex>1) {
+                _m_DataPrintTable->callback->write_string("[ ",2);
+                _m_DataPrintTable->callback->write_string(
+                    keyItem.tableName.c_str(),
+                    static_cast<int>(keyItem.tableName.size()));
+                _m_DataPrintTable->callback->write_string(" ]",2);
+                _m_DataPrintTable->callback->write_string(" = { \n",6);
+            }
+            else {
+                _m_DataPrintTable->callback->write_string(
+                    keyItem.tableName.c_str(),
+                    static_cast<int>(keyItem.tableName.size()));
+                _m_DataPrintTable->callback->write_string(" = { \n",6);
+            }
         }
         else {
-            _m_DataPrintTable->callback->write_string("{ ",2);
+            _m_DataPrintTable->callback->write_string("{ \n",3);
         }
     }
 
@@ -329,7 +399,23 @@ public:
     }
 
     void call() {
-        _m_DataPrintTable->callback->write_string("},",2);
+
+        {/*write space*/
+            auto deepth=(IntType)(_m_DataPrintTable->tablePath.size());
+            if (deepth>1) { --deepth; }
+            else { deepth=0; }
+            for (auto i=0; i<deepth; ++i) {
+                _m_DataPrintTable->callback->write_string(
+                    a_space(),a_space_length());
+            }
+        }
+
+        if (_m_TableIndex>1) {
+            _m_DataPrintTable->callback->write_string("} ,  \n",6);
+        }
+        else {
+            _m_DataPrintTable->callback->write_string("}    \n",6);
+        }
         _m_DataPrintTable->tablePath.pop_back();
     }
 private:
@@ -354,7 +440,9 @@ public:
 #define function_return() lua::settop(L,lock_top);return
 #endif 
 
+        /*add the table to path*/
         _m_DataPrintTable->tablePath.push_back(_m_TableIndex);
+
         _m_DataPrintTable->duties.emplace_front(
             new EndPrintATable<_C_>(_m_TableIndex,_m_DataPrintTable),
             [](void *arg) {reinterpret_cast<EndPrintATable<_C_>*>(arg)->call(); },
@@ -379,6 +467,13 @@ public:
             constexpr auto value_=-1;
             IntType arrayKey=1;
             while (lua::next(L,table_index)) {
+
+                if ((lua::isinteger(L,key_)==false)&&
+                    (lua::isstring(L,key_)==false)) {
+                    /*bad key*/
+                    lua::settop(L,stack_lock);
+                    continue;
+                }
 
                 /*is key is int and continue*/
                 if (keyItem.isArrayKeyContinue) {
@@ -422,6 +517,28 @@ public:
                     }
                     else {/*old one*/
 
+                        string && old_name=get_table_path_name(
+                            _m_DataPrintTable,
+                            get_table_path(_m_DataPrintTable,
+                            table_pos->second));
+
+                        string new_name=get_table_path_name(
+                            _m_DataPrintTable,
+                            _m_DataPrintTable->tablePath
+                        );
+
+                        string this_table_name=key_string(L,key_,
+                            _m_DataPrintTable->callback);
+
+                        new_name+="[ "+std::move(this_table_name)+" ] = ";
+                        new_name+=std::move(old_name)+" ;\n";
+
+                        _m_DataPrintTable->duties_endl.emplace_back(
+                            new PrintString<_C_>{ std::move(new_name),_m_DataPrintTable },
+                            [](void *arg) {reinterpret_cast<PrintString<_C_>*>(arg)->call(); },
+                            [](void *arg) {delete reinterpret_cast<PrintString<_C_>*>(arg); }
+                        );
+
                         lua::settop(L,stack_lock);
                     }
 
@@ -431,14 +548,14 @@ public:
                     str.reserve(64);
                     if (keyItem.isArrayKeyContinue) {
                         str=value_string(L,value_,_m_DataPrintTable->callback);
-                        str+=" , ";
+                        str+=" , \n";
                     }
                     else {
                         str=" [ ";
                         str+=key_string(L,key_,_m_DataPrintTable->callback);
                         str+=" ] = ";
-                        str=value_string(L,value_,_m_DataPrintTable->callback);
-                        str+=" , ";
+                        str+=value_string(L,value_,_m_DataPrintTable->callback);
+                        str+=" , \n";
                     }
                     _m_DataPrintTable->duties.emplace(
                         duties_insert_pos,
@@ -460,8 +577,8 @@ private:
 
 template<typename _T_>
 int print_table(lua::State *L) {
-    constexpr std::size_t source_table_index=1;
-    constexpr std::size_t source_callback_index=-1;
+    constexpr auto source_table_index=1;
+    constexpr auto source_callback_index=-1;
 
     if (lua::istable(L,source_table_index)==false) {
         lua::pushlstring(L,"source is not a table");
@@ -473,7 +590,9 @@ int print_table(lua::State *L) {
         lua::error(L);
     }
 
-    DataPrintTable<_T_> dataPrintTable;
+    DataPrintTable<_T_> dataPrintTable{
+        reinterpret_cast<_T_*>(lua::touserdata(L,source_callback_index))
+    };
 
     {/*init datas*/
         lua::newtable(L);
@@ -481,9 +600,7 @@ int print_table(lua::State *L) {
         lua::pushvalue(L,source_table_index);
         lua::rawseti(L,dataPrintTable.sources_table,1);
         dataPrintTable.L=L;
-        dataPrintTable.callback=
-            reinterpret_cast<_T_*>(lua::touserdata(L,source_callback_index));
-        dataPrintTable.allTables.emplace_back("",-1)/*zefo is never used*/;
+        dataPrintTable.allTables.emplace_back("never used!!!",-1)/*zefo is never used*/;
         dataPrintTable.allTables.emplace_back("ans",0)/*one is root*/;
         dataPrintTable.table_count=1;
         dataPrintTable.tablesMap.emplace(lua::topointer(L,source_table_index),1);
@@ -500,6 +617,13 @@ int print_table(lua::State *L) {
         duty.call();
     }
 
+    for (auto & i:dataPrintTable.duties_endl) {
+        i.call();
+    }
+
+    dataPrintTable.callback->write_string("\n",1);
+    dataPrintTable.callback->finished();
+
     return 0;
 }
 
@@ -509,7 +633,8 @@ int print_table(lua::State *L) {
 namespace luaL {
 
 lua::ThreadStatus print_table(lua::State*L,int t,PrintTableCallback*c) {
-    if (L==nullptr) { return lua::ERRERR; }
+    if ((L==nullptr)||(c==nullptr)) { return lua::ERRERR; }
+
     t=lua::absindex(L,t);
 
     {
