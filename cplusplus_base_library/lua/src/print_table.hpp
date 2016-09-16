@@ -30,7 +30,7 @@ public:
 LUA_API lua::ThreadStatus print_table(lua::State*,int,PrintTableCallback*);
 
 LUA_API int function_print_table(lua::State*);
-
+LUA_API int function_table_tostring(lua::State*);
 }/*luaL*/
 
 #endif

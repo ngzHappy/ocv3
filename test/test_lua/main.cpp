@@ -86,7 +86,13 @@ int main(int argc, char *argv[]){
         lua::pushcfunction(L,&luaL::function_print_table);
         lua::setglobal(L,"print_table");
 
+        lua::pushcfunction(L,&luaL::function_table_tostring);
+        lua::setglobal(L,"table_tostring");
+
         luaL::dostring(L,u8R"___(
+
+(function() print("abc") end)()
+
 xxx ={ 1 ,2, 3, z = {1.1,2.2,3.3, y ={4,5,6}},4,function()  end ,{7,9.999}}
 
 xxx.m = xxx.z
@@ -96,9 +102,14 @@ print_table(xxx)
 
 --print_table(table)
 
-for k,v in pairs(table) do
-    print(k,v)
-end
+--for k,v in pairs(_G) do
+--    print(k,v)
+--end
+
+ 
+xans = load( table_tostring(xxx) )()  
+
+print( xans[1] )
 
  )___");
              

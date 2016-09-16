@@ -198,7 +198,7 @@ inline bool is_simple_char(char i) {
     if ((i>='A')&&(i<='X')) { return true; }
     /*0-9 :;<=>*/
     if ((i>='0')&&(i<='>')) { return true; }
-    return i=='_' ;
+    return i=='_';
 }
 
 template<typename _T_>
@@ -622,7 +622,7 @@ int print_table(lua::State *L) {
     };
 
     {/*write begin*/
-        char _begin_data[]=u8R"=___=((function()--[[function begin]]
+        char _begin_data[]=u8R"=___=(return (function()--[[function begin]]
 
 local )=___=";
         dataPrintTable.callback->write_string(_begin_data,sizeof(_begin_data)-1);
@@ -656,7 +656,7 @@ local )=___=";
     }
 
     dataPrintTable.callback->write_string("\n",1);
-    
+
     {/*write end*/
         char _end_data[]=u8R"=___=(return ans;
 end)()--[[function end]]
@@ -715,6 +715,38 @@ int function_print_table(lua::State*L) {
     __private::print_table<_PrintTableCallback>(L);
 
     return 0;
+}
+
+int function_table_tostring(lua::State*L) {
+    if (L==nullptr) { return 0; }
+
+    class _PrintTableCallback final {
+        char tdata_[128];
+        std::basic_string<char,std::char_traits<char>,
+            memory::Allocator<char> >  about_to_write;
+        lua::State*L;
+    public:
+        _PrintTableCallback(lua::State*_L):L(_L) {}
+        PrintTableCallback::TempStringData temp_space()const {
+            return{ (char*)(tdata_),128 };
+        }
+        void write_string(const char*d,std::size_t l) {
+            about_to_write.append(d,l);
+        }
+        void begin() {}
+        void finished() {
+            lua::pushlstring(L,about_to_write.c_str(),
+            about_to_write.size());
+        }
+        void end() {}
+    };
+
+    _PrintTableCallback _c{ L };
+    lua::pushlightuserdata(L,&_c);
+
+    __private::print_table<_PrintTableCallback>(L);
+
+    return 1;
 }
 
 }
