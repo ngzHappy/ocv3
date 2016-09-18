@@ -38,7 +38,6 @@ SOURCES += \
     $$PWD/lua-5.3.3/src/lbaselib.cpp \
     $$PWD/lua-5.3.3/src/lbitlib.cpp \
     $$PWD/lua-5.3.3/src/lcode.cpp \
-    $$PWD/lua-5.3.3/src/lcorolib.cpp \
     $$PWD/lua-5.3.3/src/lctype.cpp \
     $$PWD/lua-5.3.3/src/ldblib.cpp \
     $$PWD/lua-5.3.3/src/ldebug.cpp \
