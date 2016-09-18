@@ -95,10 +95,6 @@ int main(int argc, char *argv[]){
     window.show();
     
     {
-        luaL::error(0,0);
-    }
-
-    {
         lua::State * L=luaL::newstate();
         lua::pushcfunction(L,&error_test1);
         lua::pushcfunction(L,luaL::default_lua_error_function);

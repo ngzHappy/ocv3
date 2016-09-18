@@ -6,8 +6,8 @@
 namespace luaL {
 
 class StateLock {
-    int top_;
     lua::State * L_;
+    int top_;
 public:
     StateLock(lua::State *_s):L_(_s) { if (L_) { top_=lua::gettop(L_); } }
     ~StateLock() { if (L_) { lua::settop(L_,top_); } }
