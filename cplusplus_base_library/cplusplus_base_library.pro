@@ -19,7 +19,7 @@ HEADERS += $$PWD/Cplusplus_base_library.hpp \
     $$PWD/memory/MemoryStatic.hpp
 
 include($$PWD/base_cplusplus_base_library.pri)
-
+include($$PWD/exception/exception.pri)
 include($$PWD/lua/lua_build.pri)
 
 include($$PWD/../OpenCVBase.pri)
