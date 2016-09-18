@@ -17,7 +17,7 @@ int default_lua_error_function(lua::State*L) {
     if (ans&&length) {
         std::cout.write(ans,length)<<std::endl;
     } else{
-        std::cout<<"unknow error"<<std::endl;
+        std::cout<<"lua:unknow error\n" ;
     }
 
     return 0;
