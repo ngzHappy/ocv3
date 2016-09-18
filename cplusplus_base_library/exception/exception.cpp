@@ -9,6 +9,8 @@ namespace __private {
 
 class TestInt {};
 
+std::ostream & log_stream() { return std::cout; }
+
 class Handle {
     int memLine;
     const char * memFunctionName;
@@ -66,7 +68,7 @@ public:
                     <<"\nfunctionName : "<<memFileName
                     <<"\n("<<__LINE__<<" , "<<__FILE__<<" , "<<__func__<<")"
                     <<std::endl;
-                std::cout<<out.rdbuf();
+                log_stream()<<out.rdbuf();
             }
             /*quit the application*/
             std::exit(0);
@@ -93,6 +95,10 @@ void exception_handle(
         throw(e);
     }
     catch (const std::bad_alloc &e) {
+        __private::log_stream()<<"bad_alloc:"
+            <<functionName<<":"<<fileName
+            <<":"<<line;
+        std::quick_exit(-1);
         throw(e);
     }
     catch (...) {
