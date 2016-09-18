@@ -9,7 +9,8 @@ class StateLock {
     lua::State * L_;
     int top_;
 public:
-    StateLock(lua::State *const _s):L_(_s) {}
+    explicit StateLock(decltype(nullptr)):L_(nullptr),top_(0) {}
+    explicit StateLock(lua::State * const _s):L_(_s),top_(0) {}
     StateLock(lua::State * const _s,const int _t):L_(_s),top_(_t) { reset(); }
     StateLock():L_(nullptr),top_(0) {}
     ~StateLock() { if (L_) { if (lua::gettop(L_)==top_) { return; } lua::settop(L_,top_); } }
@@ -26,6 +27,8 @@ public:
         arg.top_=0; arg.L_=nullptr;
         return *this;
     }
+    operator lua::State *() { return L_; }
+    operator const lua::State *() const { return L_; }
 };
 
 LUA_API int default_lua_error_function(lua::State*);
