@@ -73,7 +73,7 @@ int error_test1(lua::State *L) {
         TestStack(lua::State *L__):L_(L__) {
 
         }
-        ~TestStack() { 
+        ~TestStack() {
             std::cout<<"---c"<<std::endl;
             lua::settop(L_,0);
         }
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]){
     /*Test for main Window*/
     MainWindow window;
     window.show();
-    
+
     {
         lua::State * L=luaL::newstate();
         lua::pushcfunction(L,&error_test1);
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]){
     {
         lua::State * L=luaL::newstate();
         lua::openlibs(L);
-        
+
         lua::pushcfunction(L,&luaL::function_print_table);
         lua::setglobal(L,"print_table");
 
@@ -136,13 +136,13 @@ print_table(xxx)
 --    print(k,v)
 --end
 
- 
-xans = load( table_tostring(xxx) )()  
+
+xans = load( table_tostring(xxx) )()
 
 print( xans[1] )
 
  )___");
-             
+
         lua::close(L);
     }
 

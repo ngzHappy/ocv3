@@ -13,7 +13,6 @@ namespace exception {
 
 /*
 throw : lua_exception_type
-throw : std::bad_alloc
 */
 HANDLE_EXCEPTION_EXPORT void exception_handle(
     int line,
