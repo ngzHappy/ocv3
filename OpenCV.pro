@@ -31,13 +31,19 @@ app_test_textedit.file = $$PWD/test/test_textedit/test_textedit.pro
 app_test_textedit.depends+=lib_cplusplus_base_library
 app_test_textedit.depends+=lib_qcustomplot_library
 
+#test_network
+app_test_network.file = $$PWD/test/test_network/test_network.pro
+app_test_network.depends+=lib_cplusplus_base_library
+app_test_network.depends+=lib_qcustomplot_library
+
 SUBDIRS += \
     lib_cplusplus_base_library \
     lib_qcustomplot_library \
     app_test_emperty \
     app_test_lua \
     app_test_function \
-    app_test_textedit
+    app_test_textedit \
+    app_test_network
 
 
 
