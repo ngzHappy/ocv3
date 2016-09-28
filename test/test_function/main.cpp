@@ -87,6 +87,7 @@ int error_test1(lua::State *L) {
 }
 
 #include <utility/StaticStack.hpp>
+#include <atomic>
 #include <tuple>
 class FunctionStack {
 
@@ -123,10 +124,13 @@ class FunctionStack {
     }
 
     int _m_step=0;
-    bool _m_is_finished=false;
-    bool _m_is_error=false;
+    std::atomic<bool>_m_is_finished=false;
+    std::atomic<bool> _m_is_error=false;
 public:
     
+    bool isFinished()const { return _m_is_finished.load(); }
+    bool hasError() const { return _m_is_error.load(); }
+
     void run() {
         if (_m_is_finished) { return; }
         auto is_ok_=run_step(_m_step);
@@ -142,9 +146,17 @@ public:
 void xxx() {
 }
 
+#include <QtCore/qfile.h>
+
 int main(int argc, char *argv[]){
 
     QApplication app(argc, argv);
+
+    {
+        QFile file_("test.txt");
+        file_.open(QIODevice::WriteOnly);
+        file_.resize(1024*1024);
+    }
 
     /*Test for main Window*/
     MainWindow window;

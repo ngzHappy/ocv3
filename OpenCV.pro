@@ -26,12 +26,18 @@ app_test_function.file = $$PWD/test/test_function/test_function.pro
 app_test_function.depends+=lib_cplusplus_base_library
 app_test_function.depends+=lib_qcustomplot_library
 
+#test_textedit
+app_test_textedit.file = $$PWD/test/test_textedit/test_textedit.pro
+app_test_textedit.depends+=lib_cplusplus_base_library
+app_test_textedit.depends+=lib_qcustomplot_library
+
 SUBDIRS += \
     lib_cplusplus_base_library \
     lib_qcustomplot_library \
     app_test_emperty \
     app_test_lua \
-    app_test_function
+    app_test_function \
+    app_test_textedit
 
 
 
